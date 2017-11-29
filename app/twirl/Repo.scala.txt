@@ -1,0 +1,49 @@
+@(schema: code_generator.TypeSchema)
+package @schema.packageName
+
+import @(schema.packageName).{@(schema.className), @(schema.idClassName), @(schema.metaModelClassName)}
+import commons.models.{IdMetaModel, Page, PageRequest, Property}
+import commons.repositories._
+import commons.repositories.mappings.JavaTimeDbMappings
+import slick.dbio.DBIO
+import slick.jdbc.MySQLProfile.api.{DBIO => _, MappedTo => _, Rep => _, TableQuery => _, _}
+import slick.lifted.{ProvenShape, _}
+
+import scala.concurrent.ExecutionContext
+
+class @(schema.repoClassName)(override protected val dateTimeProvider: DateTimeProvider,
+                  implicit private val ec: ExecutionContext)
+  extends BaseRepo[@(schema.repoClassName), @(schema.className), @(schema.dbTableClassName)]
+  with AuditDateTimeRepo[@(schema.idClassName), @(schema.className), @(schema.dbTableClassName)] {
+
+  override protected val mappingConstructor: Tag => @(schema.dbTableClassName) = new @(schema.dbTableClassName)(_)
+
+  override protected val modelIdMapping: BaseColumnType[@(schema.idClassName)] = MappedColumnType.base[@(schema.idClassName), Long](
+    vo => vo.value,
+    id => @(schema.idClassName)(id)
+  )
+
+  override protected val metaModel: IdMetaModel = @(schema.metaModelClassName)
+
+  override protected val metaModelToColumnsMapping: Map[Property[_], (@(schema.dbTableClassName)) => Rep[_]] = Map(
+    @for(field <- schema.fields) {
+      @(schema.metaModelClassName).@(field.name) -> (table => table.@(field.name)),
+    }
+    @(schema.metaModelClassName).updatedAt -> (table => table.updatedAt)
+  )
+
+}
+
+protected class @(schema.dbTableClassName)(tag: Tag) extends IdTable[@(schema.idClassName), @(schema.className)](tag, @(schema.tableName))
+  with AuditDateTimeTable
+  with JavaTimeDbMappings {
+
+  @for(field <- schema.fields) {
+    def @field.name: Rep[@field.aType] = column(@(schema.metaModelClassName).@(field.name).name)
+  }
+
+  def * : ProvenShape[@(schema.className)] = (
+      @for(field <- schema.fields) {def @field.name,}
+  createdAt, updatedAt) <> (@(schema.className).tupled,
+    @(schema.className).unapply)
+}

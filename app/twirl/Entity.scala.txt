@@ -1,0 +1,33 @@
+@(schema: code_generator.TypeSchema)
+package @schema.packageName
+
+import java.time.LocalDateTime
+
+import commons.models.{IdMetaModel, Property, WithDateTimes}
+import commons.repositories.{BaseId, WithId}
+
+case class @(schema.className) (
+    @for((field, index) <- schema.fields.zipWithIndex) {
+        @field.name: @field.aType,
+    }
+    override val createdAt: LocalDateTime,
+    override val updatedAt: LocalDateTime,
+    ) extends WithId[Long, @(schema.idClassName)]
+          with WithDateTimes[@(schema.className)] {
+
+  override def updateCreatedAt(dateTime: LocalDateTime): @(schema.className) = copy(createdAt = dateTime)
+
+  override def updateUpdatedAt(dateTime: LocalDateTime): @(schema.className) = copy(updatedAt = dateTime)
+
+}
+
+case class @(schema.idClassName)(override val id: Long) extends AnyVal with BaseId[Long]
+
+object @(schema.metaModelClassName) extends IdMetaModel {
+  @for(field <- schema.fields) {
+    val @field.name: Property[@field.aType] = Property("@(field.name)")
+  }
+  val updatedAt: Property[LocalDateTime] = Property("updatedAt")
+
+  override type ModelId = @(schema.idClassName)
+}
