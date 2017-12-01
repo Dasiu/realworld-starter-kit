@@ -21,7 +21,20 @@ case class @(schema.className) (
 
 }
 
+object @(schema.className) {
+  implicit val @(schema.name)Format: Format[@(schema.className)] = Json.format[@(schema.className)]
+}
+
 case class @(schema.idClassName)(override val id: Long) extends AnyVal with BaseId[Long]
+
+object @(schema.idClassName) {
+  implicit val @(schema.idVarName)Format: Format[@(schema.idClassName)] = new Format[@(schema.idClassName)] {
+    override def reads(json: JsValue): JsResult[@(schema.idClassName)] =
+      Reads.LongReads.reads(json).map(@(schema.idClassName)(_))
+
+    override def writes(o: @(schema.idClassName)): JsNumber = Writes.LongWrites.writes(o.id)
+  }
+}
 
 object @(schema.metaModelClassName) extends IdMetaModel {
   @for(field <- schema.fields) {

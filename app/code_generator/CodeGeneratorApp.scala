@@ -20,7 +20,7 @@ object Generator {
 }
 
 object CodeGeneratorApp extends App {
-  val typeSchema = TypeSchema("Comment", "comments", "core.articles.models", List(
+  val typeSchema = TypeSchema("comment", "comments", "core.articles.models", List(
     Field("id", "CommentId"),
     Field("content", "String"),
   ))

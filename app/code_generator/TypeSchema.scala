@@ -2,6 +2,7 @@ package code_generator
 
 case class TypeSchema(name: String, namePlural: String, packageName: String, fields: Seq[Field]) {
   val className: String = name.capitalize
+  val idVarName: String = s"${name}Id"
   val idClassName: String = s"${className}Id"
   val metaModelClassName: String = s"${className}MetaModel"
 
