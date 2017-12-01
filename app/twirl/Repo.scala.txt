@@ -34,7 +34,7 @@ class @(schema.repoClassName)(override protected val dateTimeProvider: DateTimeP
 
 }
 
-protected class @(schema.dbTableClassName)(tag: Tag) extends IdTable[@(schema.idClassName), @(schema.className)](tag, @(schema.tableName))
+protected class @(schema.dbTableClassName)(tag: Tag) extends IdTable[@(schema.idClassName), @(schema.className)](tag, "@(schema.tableName)")
   with AuditDateTimeTable
   with JavaTimeDbMappings {
 
@@ -43,7 +43,7 @@ protected class @(schema.dbTableClassName)(tag: Tag) extends IdTable[@(schema.id
   }
 
   def * : ProvenShape[@(schema.className)] = (
-      @for(field <- schema.fields) {def @field.name,}
-  createdAt, updatedAt) <> (@(schema.className).tupled,
+      @for(field <- schema.fields) {@field.name, }
+  createdAt, updatedAt) <> ((@(schema.className).apply _).tupled,
     @(schema.className).unapply)
 }
