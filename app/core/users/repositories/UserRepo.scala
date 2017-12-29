@@ -1,18 +1,33 @@
 package core.users.repositories
 
 import commons.models.{Email, IdMetaModel, Property, Username}
-import commons.repositories.mappings.{EmailDbMappings, JavaTimeDbMappings, UsernameDbMappings}
 import commons.repositories._
+import commons.repositories.mappings.JavaTimeDbMappings
 import core.users.models.{User, UserId, UserMetaModel}
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api.{DBIO => _, MappedTo => _, Rep => _, TableQuery => _, _}
 import slick.lifted.{ProvenShape, _}
 
-class UserRepo(override protected val dateTimeProvider: DateTimeProvider)
+import scala.concurrent.ExecutionContext
+
+class UserRepo(override protected val dateTimeProvider: DateTimeProvider,
+               implicit private val ex: ExecutionContext)
   extends BaseRepo[UserId, User, UserTable]
       with AuditDateTimeRepo[UserId, User, UserTable] {
 
+  def byEmail(email: Email): DBIO[User] = {
+    require(email != null)
+
+    query
+      .filter(_.email === email)
+      .result
+      .headOption
+      .map(_.get)
+  }
+
   def byUsername(username: Username): DBIO[Option[User]] = {
+    require(username != null)
+
     query
       .filter(_.username === username)
       .result
@@ -21,10 +36,7 @@ class UserRepo(override protected val dateTimeProvider: DateTimeProvider)
 
   override protected val mappingConstructor: Tag => UserTable = new UserTable(_)
 
-  override protected val modelIdMapping: BaseColumnType[UserId] = MappedColumnType.base[UserId, Long](
-    vo => vo.value,
-    id => UserId(id)
-  )
+  override protected val modelIdMapping: BaseColumnType[UserId] = UserId.userIdDbMapping
 
   override protected val metaModel: IdMetaModel = UserMetaModel
 
@@ -39,11 +51,9 @@ class UserRepo(override protected val dateTimeProvider: DateTimeProvider)
   )
 }
 
-protected class UserTable(tag: Tag) extends IdTable[UserId, User](tag, "user")
-  with UsernameDbMappings
+protected class UserTable(tag: Tag) extends IdTable[UserId, User](tag, "users")
   with AuditDateTimeTable
-  with JavaTimeDbMappings
-  with EmailDbMappings {
+  with JavaTimeDbMappings {
 
   def username: Rep[Username] = column[Username]("username")
 

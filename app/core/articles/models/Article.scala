@@ -4,7 +4,9 @@ import java.time.Instant
 
 import commons.models.{IdMetaModel, Property, WithDateTimes}
 import commons.repositories.{BaseId, WithId}
+import core.users.models.UserId
 import play.api.libs.json._
+import slick.jdbc.MySQLProfile.api.{DBIO => _, MappedTo => _, Rep => _, TableQuery => _, _}
 
 case class Article(id: ArticleId,
                    slug: String,
@@ -13,6 +15,7 @@ case class Article(id: ArticleId,
                    body: String,
                    override val createdAt: Instant,
                    override val updatedAt: Instant,
+                   author: UserId
                   )
   extends WithId[Long, ArticleId]
     with WithDateTimes[Article] {
@@ -27,14 +30,19 @@ object Article {
   implicit val articleFormat: Format[Article] = Json.format[Article]
 }
 
-case class ArticleId(override val id: Long) extends AnyVal with BaseId[Long]
+case class ArticleId(override val value: Long) extends AnyVal with BaseId[Long]
 
 object ArticleId {
   implicit val articleIdFormat: Format[ArticleId] = new Format[ArticleId] {
     override def reads(json: JsValue): JsResult[ArticleId] = Reads.LongReads.reads(json).map(ArticleId(_))
 
-    override def writes(o: ArticleId): JsNumber = Writes.LongWrites.writes(o.id)
+    override def writes(o: ArticleId): JsNumber = Writes.LongWrites.writes(o.value)
   }
+
+  implicit val articleIdDbMapping: BaseColumnType[ArticleId] = MappedColumnType.base[ArticleId, Long](
+    vo => vo.value,
+    id => ArticleId(id)
+  )
 }
 
 object ArticleMetaModel extends IdMetaModel {
@@ -44,6 +52,8 @@ object ArticleMetaModel extends IdMetaModel {
   val body: Property[String] = Property("body")
 
   val updatedAt: Property[Instant] = Property("updatedAt")
+
+  val userId: Property[UserId] = Property("userId")
 
   override type ModelId = ArticleId
 }

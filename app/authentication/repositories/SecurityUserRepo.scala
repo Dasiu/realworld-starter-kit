@@ -3,7 +3,7 @@ package authentication.repositories
 import authentication.repositories.mappings.SecurityUserDbMappings
 import commons.models.{Email, IdMetaModel, Property}
 import commons.repositories._
-import commons.repositories.mappings.{EmailDbMappings, JavaTimeDbMappings}
+import commons.repositories.mappings.JavaTimeDbMappings
 import core.authentication.api.{PasswordHash, SecurityUser, SecurityUserId}
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api.{DBIO => _, MappedTo => _, Rep => _, TableQuery => _, _}
@@ -13,7 +13,6 @@ private[authentication] class SecurityUserRepo(
                                                          override protected val dateTimeProvider: DateTimeProvider)
   extends BaseRepo[SecurityUserId, SecurityUser, SecurityUserTable]
     with AuditDateTimeRepo[SecurityUserId, SecurityUser, SecurityUserTable]
-    with EmailDbMappings
     with SecurityUserDbMappings {
 
   def byEmail(email: Email): DBIO[Option[SecurityUser]] = {
@@ -27,10 +26,7 @@ private[authentication] class SecurityUserRepo(
 
   override protected val mappingConstructor: Tag => SecurityUserTable = new SecurityUserTable(_)
 
-  override protected val modelIdMapping: BaseColumnType[SecurityUserId] = MappedColumnType.base[SecurityUserId, Long](
-    vo => vo.value,
-    id => SecurityUserId(id)
-  )
+  override protected val modelIdMapping: BaseColumnType[SecurityUserId] = SecurityUserId.securityUserIdDbMapping
 
   override protected val metaModel: IdMetaModel = SecurityUserMetaModel
 
@@ -42,10 +38,9 @@ private[authentication] class SecurityUserRepo(
 
 }
 
-protected class SecurityUserTable(tag: Tag) extends IdTable[SecurityUserId, SecurityUser](tag, "security_user")
+protected class SecurityUserTable(tag: Tag) extends IdTable[SecurityUserId, SecurityUser](tag, "security_users")
   with AuditDateTimeTable
   with JavaTimeDbMappings
-  with EmailDbMappings
   with SecurityUserDbMappings {
 
   def email: Rep[Email] = column("email")

@@ -1,51 +1,65 @@
 package core.articles.config
 
+import com.github.slugify.Slugify
+import commons.repositories.{ActionRunner, DateTimeProvider}
 import core.articles.ArticleComponents
-import core.articles.models.{Article, NewArticle, NewTag, Tag}
-import core.articles.repositories.{ArticleRepo, TagRepo}
-import commons.repositories.ActionRunner
-import testhelpers.TestUtils
-import core.users.models.UserId
-
-import scala.concurrent.duration.DurationInt
+import core.articles.models._
+import core.articles.repositories.{ArticleRepo, ArticleTagRepo, TagRepo}
+import core.users.config.UserTestComponents
+import core.users.models.User
+import core.users.test_helpers.UserPopulator
+import testhelpers.Populator
 
 trait ArticleTestComponents {
-  _: ArticleComponents =>
+  _: ArticleComponents with UserTestComponents =>
 
-  lazy val articlePopulator: ArticlePopulator = new ArticlePopulator(articleRepo, actionRunner)
+  lazy val articlePopulator: ArticlePopulator =
+    new ArticlePopulator(articleRepo, userPopulator, dateTimeProvider, actionRunner)
 
   lazy val tagPopulator: TagPopulator = new TagPopulator(tagRepo, actionRunner)
+
+  lazy val articleTagPopulator: ArticleTagPopulator = new ArticleTagPopulator(articleTagRepo, actionRunner)
 
 }
 
 class ArticlePopulator(articleRepo: ArticleRepo,
-                       implicit private val actionRunner: ActionRunner) {
+                       userPopulator: UserPopulator,
+                       dateTimeProvider: DateTimeProvider,
+                       implicit private val actionRunner: ActionRunner) extends Populator {
 
-  def save(article: NewArticle): Article = {
-    val action = articleRepo.create(article.toArticle)
-    TestUtils.runAndAwaitResult(action)(actionRunner, new DurationInt(1).minute)
+  def save(article: NewArticle)(user: User): Article = {
+    val slugifier = new Slugify()
+    val slug = slugifier.slugify(article.title)
+    runAndAwait(articleRepo.create(article.toArticle(slug, user.id, dateTimeProvider)))
   }
 
 }
 
 class TagPopulator(tagRepo: TagRepo,
-                   implicit private val actionRunner: ActionRunner) {
+                   implicit private val actionRunner: ActionRunner) extends Populator {
+
+  def all: Seq[Tag] = {
+    runAndAwait(tagRepo.all)
+  }
 
   def save(tag: NewTag): Tag = {
-    val action = tagRepo.create(tag.toTag)
-    TestUtils.runAndAwaitResult(action)(actionRunner, new DurationInt(1).minute)
+    runAndAwait(tagRepo.create(tag.toTag))
+  }
+
+}
+
+class ArticleTagPopulator(articleTagRepo: ArticleTagRepo,
+                          implicit private val actionRunner: ActionRunner) extends Populator {
+
+  def save(articleTag: ArticleTag): ArticleTag = {
+    runAndAwait(articleTagRepo.create(articleTag))
   }
 
 }
 
 object Articles {
-  val hotToTrainYourDragon: NewArticle = NewArticle(
-    "how-to-train-your-dragon",
-    "how-to-train-your-dragon",
-    "Ever wonder how?",
-    "It takes a Jacobian",
-    UserId(-1)
-  )
+  val hotToTrainYourDragon: NewArticle = NewArticle("how-to-train-your-dragon", "Ever wonder how?",
+    "It takes a Jacobian", Seq(Tags.dragons.name))
 }
 
 object Tags {
