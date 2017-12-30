@@ -22,7 +22,9 @@ object Generator {
 object CodeGeneratorApp extends App {
   val typeSchema = TypeSchema("comment", "comments", "core.articles.models", List(
     Field("id", "CommentId"),
-    Field("content", "String"),
+    Field("articleId", "ArticleId"),
+    Field("authorId", "UserId"),
+    Field("body", "String"),
   ))
 
   Generator.generators.foreach(generator => {

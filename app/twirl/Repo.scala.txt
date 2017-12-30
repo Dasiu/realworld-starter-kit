@@ -13,15 +13,12 @@ import scala.concurrent.ExecutionContext
 
 class @(schema.repoClassName)(override protected val dateTimeProvider: DateTimeProvider,
                   implicit private val ec: ExecutionContext)
-  extends BaseRepo[@(schema.repoClassName), @(schema.className), @(schema.dbTableClassName)]
+  extends BaseRepo[@(schema.idClassName), @(schema.className), @(schema.dbTableClassName)]
   with AuditDateTimeRepo[@(schema.idClassName), @(schema.className), @(schema.dbTableClassName)] {
 
   override protected val mappingConstructor: Tag => @(schema.dbTableClassName) = new @(schema.dbTableClassName)(_)
 
-  override protected val modelIdMapping: BaseColumnType[@(schema.idClassName)] = MappedColumnType.base[@(schema.idClassName), Long](
-    vo => vo.value,
-    id => @(schema.idClassName)(id)
-  )
+  override protected val modelIdMapping: BaseColumnType[@(schema.idClassName)] = @(schema.idClassName).@(schema.idVarName)DbMapping
 
   override protected val metaModel: IdMetaModel = @(schema.metaModelClassName)
 

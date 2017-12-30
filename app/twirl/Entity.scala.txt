@@ -6,6 +6,7 @@ import java.time.Instant
 import commons.models.{IdMetaModel, Property, WithDateTimes}
 import commons.repositories.{BaseId, WithId}
 import play.api.libs.json._
+import slick.jdbc.MySQLProfile.api.{DBIO => _, MappedTo => _, Rep => _, TableQuery => _, _}
 
 case class @(schema.className) (
     @for((field, index) <- schema.fields.zipWithIndex) {
@@ -26,15 +27,20 @@ object @(schema.className) {
   implicit val @(schema.name)Format: Format[@(schema.className)] = Json.format[@(schema.className)]
 }
 
-case class @(schema.idClassName)(override val id: Long) extends AnyVal with BaseId[Long]
+case class @(schema.idClassName)(value: Long) extends AnyVal with BaseId[Long]
 
 object @(schema.idClassName) {
   implicit val @(schema.idVarName)Format: Format[@(schema.idClassName)] = new Format[@(schema.idClassName)] {
     override def reads(json: JsValue): JsResult[@(schema.idClassName)] =
       Reads.LongReads.reads(json).map(@(schema.idClassName)(_))
 
-    override def writes(o: @(schema.idClassName)): JsNumber = Writes.LongWrites.writes(o.id)
+    override def writes(o: @(schema.idClassName)): JsNumber = Writes.LongWrites.writes(o.value)
   }
+
+  implicit val @(schema.idVarName)DbMapping: BaseColumnType[@(schema.idClassName)] = MappedColumnType.base[@(schema.idClassName), Long](
+                                                 vo => vo.value,
+                                                 id => @(schema.idClassName)(id)
+                                               )
 }
 
 object @(schema.metaModelClassName) extends IdMetaModel {
