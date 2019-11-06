@@ -110,16 +110,19 @@ class ArticleRepo(userRepo: UserRepo,
       .joinLeft(favoriteAssociation.query)
       .on((tables, favoritedAssociationTable) => tables._1._1._1.id === favoritedAssociationTable.favoritedId)
 
-    MaybeFilter(joins)
-      .filter(pageRequest.author)(authorUsername => tables => getUserTable(tables).username === authorUsername)
-      .filter(pageRequest.tag)(tagValue => tables => getTagTable(tables).map(_.name === tagValue))
-      .filter(pageRequest.favorited)(favoritedUsername => tables => {
-        getFavoritedAssociationTable(tables).map(favoritedAssociationTable => {
-          val userTable = getUserTable(tables)
-          favoritedAssociationTable.userId === userTable.id && userTable.username === favoritedUsername
-        })
-      })
-      .query
+    joins
+        .filterOpt(pageRequest.author){
+          case (tables, authorUsername) => getUserTable(tables).username === authorUsername
+        }
+        .filterOpt(pageRequest.tag){
+          case (tables, tag) => getTagTable(tables).map(_.name === tag)
+        }
+        .filterOpt(pageRequest.favorited){
+          case (tables, favoritedUsername) => getFavoritedAssociationTable(tables).map(favoritedAssociationTable => {
+            val userTable = getUserTable(tables)
+            favoritedAssociationTable.userId === userTable.id && userTable.username === favoritedUsername
+          })
+        }
   }
 
   private def getArticleTab(tables: ((((ArticleTable, UserTable), Rep[Option[ArticleTagAssociationTable]]), Rep[Option[TagTable]]), Rep[Option[FavoriteAssociationTable]])) = {
