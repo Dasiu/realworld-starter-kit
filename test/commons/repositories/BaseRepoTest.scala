@@ -3,7 +3,6 @@ package commons.repositories
 import java.time.Instant
 
 import commons.models._
-import commons.repositories.mappings.JavaTimeDbMappings
 import commons.services.ActionRunner
 import commons_test.test_helpers.RealWorldWithServerAndTestConfigBaseTest.RealWorldWithTestConfig
 import commons_test.test_helpers.{ProgrammaticDateTimeProvider, RealWorldWithServerBaseTest, TestUtils}
@@ -115,8 +114,7 @@ import slick.dbio.DBIO
 import slick.jdbc.H2Profile.api.{DBIO => _, MappedTo => _, Rep => _, TableQuery => _, _}
 
 class TestModelRepo(private val actionRunner: ActionRunner)
-  extends BaseRepo[TestModelId, TestModel, TestModelTable]
-    with JavaTimeDbMappings {
+  extends BaseRepo[TestModelId, TestModel, TestModelTable] {
 
   override protected val mappingConstructor: Tag => TestModelTable = new TestModelTable(_)
   override protected val modelIdMapping: BaseColumnType[TestModelId] = TestModelId.testModelIdDbMapping
@@ -150,8 +148,7 @@ class TestModelRepo(private val actionRunner: ActionRunner)
 }
 
 
-class TestModelTable(tag: Tag) extends IdTable[TestModelId, TestModel](tag, "test_model")
-  with JavaTimeDbMappings {
+class TestModelTable(tag: Tag) extends IdTable[TestModelId, TestModel](tag, "test_model") {
 
   def * : ProvenShape[TestModel] = (id, name, age, createdAt, updatedAt) <> (TestModel.tupled, TestModel.unapply)
 

@@ -5,7 +5,6 @@ import java.time.Instant
 
 import commons.models._
 import commons.repositories._
-import commons.repositories.mappings.JavaTimeDbMappings
 import articles.models.{Tag => _, _}
 import users.models.{User, UserId}
 import users.repositories.UserRepo
@@ -16,7 +15,7 @@ import slick.lifted.{ProvenShape, _}
 import scala.concurrent.ExecutionContext
 
 class CommentRepo(userRepo: UserRepo, implicit private val ec: ExecutionContext)
-  extends BaseRepo[CommentId, Comment, CommentTable] with JavaTimeDbMappings {
+  extends BaseRepo[CommentId, Comment, CommentTable] {
 
   def findByArticleId(articleId: ArticleId): DBIO[Seq[Comment]] = {
     query
@@ -43,8 +42,7 @@ class CommentRepo(userRepo: UserRepo, implicit private val ec: ExecutionContext)
 
 }
 
-protected class CommentTable(tag: Tag) extends IdTable[CommentId, Comment](tag, "comments")
-  with JavaTimeDbMappings {
+protected class CommentTable(tag: Tag) extends IdTable[CommentId, Comment](tag, "comments") {
 
   def articleId: Rep[ArticleId] = column("article_id")
 

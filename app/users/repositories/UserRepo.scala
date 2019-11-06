@@ -6,7 +6,6 @@ import authentication.models.SecurityUserId
 import commons.exceptions.MissingModelException
 import commons.models.{Email, IdMetaModel, Property, Username}
 import commons.repositories._
-import commons.repositories.mappings.JavaTimeDbMappings
 import commons.utils.DbioUtils
 import users.models.{User, UserId, UserMetaModel}
 import slick.dbio.DBIO
@@ -78,8 +77,7 @@ class UserRepo(implicit private val ec: ExecutionContext) extends BaseRepo[UserI
   )
 }
 
-class UserTable(tag: Tag) extends IdTable[UserId, User](tag, "users")
-  with JavaTimeDbMappings {
+class UserTable(tag: Tag) extends IdTable[UserId, User](tag, "users") {
 
   def securityUserId: Rep[SecurityUserId] = column[SecurityUserId]("security_user_id")
 

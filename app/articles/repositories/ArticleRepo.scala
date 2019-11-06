@@ -5,7 +5,6 @@ import java.time.Instant
 import commons.exceptions.MissingModelException
 import commons.models._
 import commons.repositories._
-import commons.repositories.mappings.JavaTimeDbMappings
 import commons.utils.DbioUtils
 import articles.models.{Tag => _, _}
 import users.models.{User, UserId}
@@ -22,8 +21,7 @@ class ArticleRepo(userRepo: UserRepo,
                   tagRepo: TagRepo,
                   followAssociationRepo: FollowAssociationRepo,
                   favoriteAssociation: FavoriteAssociationRepo,
-                  implicit private val ec: ExecutionContext) extends BaseRepo[ArticleId, Article, ArticleTable]
-  with JavaTimeDbMappings {
+                  implicit private val ec: ExecutionContext) extends BaseRepo[ArticleId, Article, ArticleTable] {
 
   def findBySlugOption(slug: String): DBIO[Option[Article]] = {
     require(StringUtils.isNotBlank(slug))
@@ -154,8 +152,7 @@ class ArticleRepo(userRepo: UserRepo,
 
 }
 
-protected class ArticleTable(tag: Tag) extends IdTable[ArticleId, Article](tag, "articles")
-  with JavaTimeDbMappings {
+protected class ArticleTable(tag: Tag) extends IdTable[ArticleId, Article](tag, "articles") {
 
   def slug: Rep[String] = column(ArticleMetaModel.slug.name)
 

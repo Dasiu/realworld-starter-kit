@@ -5,7 +5,6 @@ import java.time.Instant
 import authentication.exceptions.MissingSecurityUserException
 import commons.models.{Email, IdMetaModel, Property}
 import commons.repositories._
-import commons.repositories.mappings.JavaTimeDbMappings
 import authentication.models.{PasswordHash, SecurityUser, SecurityUserId}
 import commons.utils.DbioUtils.optionToDbio
 import slick.dbio.DBIO
@@ -48,8 +47,7 @@ private[authentication] class SecurityUserRepo(implicit private val ex: Executio
 
 }
 
-protected class SecurityUserTable(tag: Tag) extends IdTable[SecurityUserId, SecurityUser](tag, "security_users")
-  with JavaTimeDbMappings {
+protected class SecurityUserTable(tag: Tag) extends IdTable[SecurityUserId, SecurityUser](tag, "security_users") {
 
   def email: Rep[Email] = column("email")
 
